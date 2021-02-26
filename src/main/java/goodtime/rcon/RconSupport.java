@@ -30,7 +30,6 @@ public class RconSupport {
                 return rcon.command("list");
             } else if (command.contains("/say")) {
 
-
                 try {
                     rcon.connect(config.hostname, config.port, config.password.getBytes());
                 } catch (AuthenticationException e) {

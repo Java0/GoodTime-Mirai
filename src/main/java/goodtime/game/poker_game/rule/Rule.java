@@ -1,7 +1,8 @@
-package goodtime.game.poker_game;
+package goodtime.game.poker_game.rule;
 
 
 
+import goodtime.game.poker_game.Poker;
 import goodtime.game.poker_game.poker_game_util.PokerUtil;
 
 import java.util.ArrayList;
@@ -22,59 +23,59 @@ public class Rule {
         HashMap<Poker, Integer> pokersCountMap = PokerUtil.getPokersCountMap(outPokers);
         switch (outPokers.size()) {
             case 1:
-                rule = "单牌";
+                rule = Rules.A;
                 power = outPokers.get(0).getPower();
                 break;
             case 2:
                 if (isAA(noRepeatPokers)) {
-                    rule = "对牌";
+                    rule = Rules.AA;
                     power = noRepeatPokers.get(0).getPower() * 2;
                 } else if (isSuperBomb(noRepeatPokers)) {
-                    rule = "王炸";
+                    rule = Rules.SUPER_BOMB;
                     power = Integer.MAX_VALUE;
                 }
                 break;
             case 3:
                 if (isAAA(noRepeatPokers)) {
-                    rule = "3带0";
+                    rule = Rules.AAA;
                     power = noRepeatPokers.get(0).getPower() * 3;
                 }
                 break;
             case 4:
                 if (isBomb(noRepeatPokers)) {
-                    rule = "炸弹";
+                    rule = Rules.BOMB;
                     power = noRepeatPokers.get(0).getPower() * 4;
                 } else if (isAAAB(noRepeatPokers, pokersCountMap)) {
-                    rule = "3带1";
+                    rule = Rules.AAAB;
                     power = getThreeCountPoker(noRepeatPokers, pokersCountMap).getPower() * 3;
                 }
                 break;
             case 5:
                 if (isAAABB(noRepeatPokers, pokersCountMap)) {
-                    rule = "3带2";
+                    rule = Rules.AAABB;
                     power = getThreeCountPoker(noRepeatPokers, pokersCountMap).getPower() * 3;
                 } else if (isABC(noRepeatPokers, outPokers)) {
-                    rule = "顺子";
+                    rule = Rules.ABC;
                     power = getContinuousPower(noRepeatPokers);
                     continuousCount = noRepeatPokers.size();
                 }
                 break;
             default:
                 if (isABC(noRepeatPokers, outPokers)) {
-                    rule = "顺子";
+                    rule = Rules.ABC;
                     power = getContinuousPower(noRepeatPokers);
                     continuousCount = noRepeatPokers.size();
                 } else if (isAABBCC(noRepeatPokers, pokersCountMap)) {
-                    rule = "连对";
+                    rule = Rules.AABBCC;
                     power = getContinuousPower(noRepeatPokers) * 2;
                     continuousCount = noRepeatPokers.size();
                 } else if (isAAAABB(noRepeatPokers, pokersCountMap)) {
-                    rule = "4带2";
+                    rule = Rules.AAAABB;
                     power = getFourCountPoker(noRepeatPokers, pokersCountMap).getPower() * 4;
                 } else if (isSpecialPlane(noRepeatPokers, pokersCountMap)) {
-                    rule = "特殊飞机";
+                    rule = Rules.SPECIAL_PLANE;
                 } else if (isPlane(noRepeatPokers, pokersCountMap) || isPlane(noRepeatPokers, pokersCountMap, outPokers)) {
-                    rule = "飞机";
+                    rule = Rules.PLANE;
                 }
                 break;
         }
@@ -239,7 +240,6 @@ public class Rule {
             }
         }
 
-
         int wingLength = 0;
 
         this.power = getContinuousPower(body);
@@ -323,31 +323,31 @@ public class Rule {
         boolean basicConditions = basicConditions(rule);
 
         switch (rule.getRule()) {
-            case "单牌":
-            case "对牌":
-            case "3带0":
-            case "3带1":
-            case "3带2":
-            case "4带2":
+            case Rules.A:
+            case Rules.AA:
+            case Rules.AAA:
+            case Rules.AAAB:
+            case Rules.AAABB:
+            case Rules.AAAABB:
                 return basicConditions;
-            case "顺子":
-            case "连对":
+            case Rules.ABC:
+            case Rules.AABBCC:
                 return basicConditions && this.continuousCount == rule.getContinuousCount();
-            case "王炸":
+            case Rules.SUPER_BOMB:
                 return true;
-            case "炸弹":
+            case Rules.BOMB:
                 if (!this.rule.equals("炸弹")) {
                     return true;
                 } else {
                     return basicConditions;
                 }
 
-            case "特殊飞机":
+            case Rules.SPECIAL_PLANE:
                 return rule.getPower() > this.power
                         && (this.getRule().equals("特殊飞机") || this.getRule().equals("飞机"))
                         && ((this.getContinuousCount() == 4 && this.getWingLength() == 0) || (this.getContinuousCount() == 3 && this.getWingLength() == 1));
 
-            case "飞机":
+            case Rules.PLANE:
                 return basicConditions && this.continuousCount == rule.getContinuousCount() && this.wingLength == rule.getWingLength();
         }
         return false;
