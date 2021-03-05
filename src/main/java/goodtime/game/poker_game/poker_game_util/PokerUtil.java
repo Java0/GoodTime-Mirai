@@ -9,11 +9,6 @@ import java.util.*;
 
 public class PokerUtil {
 
-    public static ArrayList<Poker> getPool(ArrayList<Poker> pool, int type) {
-
-        return null;
-    }
-
     public static void addPokers(ArrayList<Poker> defaultPool) {
 
         for (int i = 0; i < Pokers.simpleSymbols.size() - 2; i++) {
@@ -57,57 +52,6 @@ public class PokerUtil {
         return sb.toString().trim();
 
     }
-
-
-    public static int isSnatch(String memberOut) {
-        switch (memberOut) {
-            case "n":
-            case "不抢":
-            case "抢你妈":
-            case "开始游戏":
-                return 0;
-            case "y":
-            case "抢":
-            case "抢他妈的":
-                return 1;
-
-        }
-        return -1;
-    }
-
-    public static boolean isPassCommand(String memberOut) {
-
-        String temp = memberOut.toLowerCase();
-
-        switch (temp) {
-            case "p":
-            case "pass":
-            case "passs":
-            case "passss":
-            case "passsss":
-            case "passssss":
-            case "passsssss":
-            case "passssssss":
-            case "passsssssss":
-            case "过":
-            case "不要":
-            case "要不起":
-                return true;
-        }
-        return false;
-    }
-
-    public static boolean isReDoubleCommand(String memberout) {
-        switch (memberout) {
-            case "加倍":
-            case "减倍":
-            case "超级加倍":
-            case "超级减倍":
-                return true;
-        }
-        return false;
-    }
-
 
     public static ArrayList<Poker> getNoRepeatPokers(ArrayList<Poker> outPokers) {
 

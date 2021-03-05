@@ -1,7 +1,8 @@
 package goodtime.game.poker_game;
 
+import goodtime.game.Casinos;
+import goodtime.game.Game;
 import goodtime.game.Player;
-import goodtime.game.game_util.GameUtil;
 import goodtime.game.poker_game.poker_game_util.PokerUtil;
 import goodtime.game.poker_game.rule.Rule;
 import net.mamoe.mirai.contact.Group;
@@ -14,13 +15,64 @@ import java.util.List;
 
 public class DouDiZhu extends PokerGame {
 
+    int state = NOT_RUNING;
+
+    private final String NAME = "斗地主";
 
     public DouDiZhu(Group group) {
-        super(group);
+        maxPlayerCount = 3;
+        this.group = group;
+    }
+
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public int getState() {
+        return state;
+    }
+
+    private boolean isCommand(String command) {
+        return isSnatchCoomand(command) != -1 || isPassCommand(command) || isReDoubleCommand(command);
+    }
+
+
+    @Override
+    public void commandParse(String command, String playerNick) {
+        switch (currentPhase) {
+            case "":
+                initializationPhase(command);
+                break;
+            case INITIALIZATION_PHASE:
+                if (isCommand(command)) {
+                    if (isYourTurn(playerNick)) {
+                        initializationPhase(command);
+                    } else {
+                        group.sendMessage("不是你的回合哟");
+                    }
+                }
+                break;
+            case GAMING_PHASE:
+                if (PokerUtil.outIsPoker(command) || isCommand(command)) {
+                    if (isYourTurn(playerNick)) {
+                        gamingPhase(command);
+                    } else {
+                        group.sendMessage("不是你的回合哟");
+                    }
+                }
+                break;
+            case END_PHASE:
+                endPhase();
+                break;
+        }
     }
 
     @Override
     public void start() {
+
+        state = RUNING;
 
         PokerUtil.addPokers(pool);
         PokerUtil.deal(pool, players);
@@ -30,7 +82,8 @@ public class DouDiZhu extends PokerGame {
         }
 
         Collections.shuffle(players);
-        initializationPhase("n");
+
+        commandParse("n", "");
 
     }
 
@@ -41,55 +94,122 @@ public class DouDiZhu extends PokerGame {
         return memberNick.equals(players.get(currentPlayerIndex).getSender().getNick());
     }
 
+
+    @Override
+    public boolean isJoinCommand(String memberOut) {
+        switch (memberOut) {
+            case ".上桌":
+            case ".fork table":
+            case ".sz":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public boolean isLeaveCommand(String memberOut) {
+        switch (memberOut) {
+            case ".下桌":
+            case ".xz":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public boolean isStartCommand(String memberOut) {
+
+        switch (memberOut) {
+            case "开始游戏":
+            case "start":
+            case "ks":
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean equals(Game game) {
+        return this.getName().equals(game.getName());
+    }
+
+    private int isSnatchCoomand(String memberOut) {
+        switch (memberOut) {
+            case "n":
+            case "不抢":
+            case "抢你妈":
+            case "开始游戏":
+                return 0;
+            case "y":
+            case "抢":
+            case "抢他妈的":
+                return 1;
+
+        }
+        return -1;
+    }
+
+    private boolean isPassCommand(String memberOut) {
+
+        String temp = memberOut.toLowerCase();
+
+        switch (temp) {
+            case "p":
+            case "pass":
+            case "passs":
+            case "passss":
+            case "passsss":
+            case "passssss":
+            case "passsssss":
+            case "passssssss":
+            case "passsssssss":
+            case "过":
+            case "不要":
+            case "要不起":
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isReDoubleCommand(String memberOut) {
+        String temp = memberOut.toLowerCase();
+        switch (temp) {
+            case "加倍":
+            case "减倍":
+            case "超级加倍":
+            case "超级减倍":
+                return true;
+        }
+        return false;
+    }
+
+
     private int rejectionTimes;
 
     @Override
     public void initializationPhase(String memberIn) {
 
-        currentPhase = GameUtil.INITIALIZATION_PHASE;
+        currentPhase = INITIALIZATION_PHASE;
 
-        switch (memberIn) {
-            case "加倍":
-                for (Player player : players) {
-                    player.setBasicScore(player.getBasicScore() * 2);
-                }
-                group.sendMessage("加倍成功。");
-                break;
-            case "超级加倍":
-                for (Player player : players) {
-                    player.setBasicScore(player.getBasicScore() * 4);
-                }
-                group.sendMessage("超级加倍成功。");
-                break;
-            case "减倍":
-                for (Player player : players) {
-                    player.setBasicScore(player.getBasicScore() / 2);
-                }
-                group.sendMessage("减倍成功。");
-                break;
-            case "超级减倍":
-                for (Player player : players) {
-                    player.setBasicScore(player.getBasicScore() / 4);
-                }
-                group.sendMessage("超级减倍成功。");
-                break;
-        }
+        manualDoubling(memberIn);
 
-        switch (PokerUtil.isSnatch(memberIn)) {
+        switch (isSnatchCoomand(memberIn)) {
             case 1:
-                Player p = players.get(currentPlayerIndex);
-                Member m = p.getSender();
+                Player currentPlayer = players.get(currentPlayerIndex);
+                Member m = currentPlayer.getSender();
 
-                p.setLandlord(true);
+                currentPlayer.setLandlord(true);
 
-                p.setBasicScore(p.getBasicScore() * 2);
+                currentPlayer.setBasicScore(currentPlayer.getBasicScore() * 2);
 
                 List<Poker> lPokers = pool.subList(pool.size() - 4, pool.size() - 1);
 
-                p.addHandPokers(lPokers);
+                currentPlayer.addHandPokers(lPokers);
 
                 group.sendMessage(new At(m.getId()).plus("是地主，底牌是:\n" + PokerUtil.pokersToString(lPokers)));
-                m.sendMessage("你是地主，现有牌：\n" + PokerUtil.pokersToString(p.getHandPokers()));
+                m.sendMessage("你是地主，现有牌：\n" + PokerUtil.pokersToString(currentPlayer.getHandPokers()));
                 gamingPhase("");
                 break;
             case 0:
@@ -98,7 +218,7 @@ public class DouDiZhu extends PokerGame {
                 if (rejectionTimes == 3) {
                     initializationPhase("y");
                 } else {
-                    group.sendMessage(new At(players.get(currentPlayerIndex).getSender().getId()).plus("请问您要抢地主吗？"));
+                    group.sendMessage(new At(players.get(currentPlayerIndex).getSender().getId()).plus("请问您要抢地主吗？ y/n"));
                 }
                 break;
         }
@@ -113,7 +233,7 @@ public class DouDiZhu extends PokerGame {
 
     @Override
     public void gamingPhase(String memberOut) {
-        currentPhase = GameUtil.GAMING_PHASE;
+        currentPhase = GAMING_PHASE;
 
         Player currentPlayer = players.get(currentPlayerIndex);
 
@@ -131,7 +251,7 @@ public class DouDiZhu extends PokerGame {
                 //如果你出的牌符合一个规则
                 if (currentRule.getRule() != null) {
 
-                    reDouble(currentRule.getRule());
+                    redouble(currentRule.getRule());
 
                     for (Poker poker : currentOutPokers) {
                         currentPlayer.removeHandPoker(poker);
@@ -174,7 +294,7 @@ public class DouDiZhu extends PokerGame {
 
                 currentRule = nextRule;
 
-                reDouble(currentRule.getRule());
+                redouble(currentRule.getRule());
 
                 for (Poker poker : currentOutPokers) {
                     currentPlayer.removeHandPoker(poker);
@@ -205,7 +325,7 @@ public class DouDiZhu extends PokerGame {
             }
 
 
-        } else if (PokerUtil.isPassCommand(memberOut)) {
+        } else if (isPassCommand(memberOut)) {
             if (currentOutPokers == null) {
                 group.sendMessage("在？为什么不出牌？");
             } else {
@@ -223,7 +343,38 @@ public class DouDiZhu extends PokerGame {
         }
     }
 
-    private void reDouble(String rule) {
+    private void manualDoubling(String memberIn) {
+        switch (memberIn) {
+            case "加倍":
+                for (Player player : players) {
+                    player.setBasicScore(player.getBasicScore() * 2);
+                }
+                group.sendMessage("加倍成功。");
+                break;
+            case "超级加倍":
+                for (Player player : players) {
+                    player.setBasicScore(player.getBasicScore() * 4);
+                }
+                group.sendMessage("超级加倍成功。");
+                break;
+            case "减倍":
+                for (Player player : players) {
+                    player.setBasicScore(player.getBasicScore() / 2);
+                }
+                group.sendMessage("减倍成功。");
+                break;
+            case "超级减倍":
+                for (Player player : players) {
+                    player.setBasicScore(player.getBasicScore() / 4);
+                }
+                group.sendMessage("超级减倍成功。");
+                break;
+        }
+
+    }
+
+
+    private void redouble(String rule) {
         if (rule.equals("炸弹")) {
             for (Player player : players) {
                 player.setBasicScore(player.getBasicScore() * 2);
@@ -241,23 +392,23 @@ public class DouDiZhu extends PokerGame {
 
     @Override
     public void endPhase() {
-        currentPhase = GameUtil.END_PHASE;
+        currentPhase = END_PHASE;
 
         StringBuilder sb = new StringBuilder("战况：");
 
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
-            int score = SCORE_MAP.get(p.getSender().getId());
+            int score = Casinos.SCORE_MAP.get(p.getSender().getId());
             if (i == currentPlayerIndex) {
-                SCORE_MAP.put(p.getSender().getId(), score + p.getBasicScore());
+                Casinos.SCORE_MAP.put(p.getSender().getId(), score + p.getBasicScore());
                 sb.append("\n").append(p.getSender().getNick()).append(" +").append(p.getBasicScore());
             } else {
-                SCORE_MAP.put(p.getSender().getId(), score - p.getBasicScore());
+                Casinos.SCORE_MAP.put(p.getSender().getId(), score - p.getBasicScore());
                 sb.append("\n").append(p.getSender().getNick()).append(" -").append(p.getBasicScore());
             }
         }
-        scoreJson.save();
+        Casinos.scoreJson.save();
         group.sendMessage("游戏结束，" + sb.toString().trim());
-        GAME_MAP.remove(group.getId());
+        Casinos.GAME_MAP.remove(group.getId());
     }
 }

@@ -20,7 +20,7 @@ suspend fun main() {
     JavaPluginMain.INSTANCE.load()
     JavaPluginMain.INSTANCE.enable()
 
-    val bot = MiraiConsole.addBot(12345678, "123456789") {
+    val bot = MiraiConsole.addBot(123, "123") {
         fileBasedDeviceInfo()
     }.alsoLogin()
     MiraiConsole.job.join()

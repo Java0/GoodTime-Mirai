@@ -2,7 +2,7 @@ package goodtime.mirai;
 
 
 
-import goodtime.game.Game;
+import goodtime.game.Casinos;
 import goodtime.rcon.RconSupport;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
@@ -33,16 +33,16 @@ public final class JavaPluginMain extends JavaPlugin {
         MessageChain message = event.getMessage();
         String membersOut = message.contentToString();
 
-        Game.run(event);
+        Casinos.run(event);
 
         if (membersOut.startsWith("/")) {
 
             if (connectSuccessful) {
                 String commandReturn = RconSupport.runCommand(membersOut, event.getSender().getNameCard());
                 if (membersOut.contains("/list")) {
-                    event.getSubject().sendMessage(commandReturn.trim());
+                    event.getSubject().sendMessage(commandReturn);
                 } else if (commandReturn != null) {
-                    event.getSubject().sendMessage(commandReturn.trim());
+                    event.getSubject().sendMessage(commandReturn);
                 } else {
                     event.getSubject().sendMessage("宁没有权限使用此命令或命令错误。");
                 }
@@ -84,10 +84,10 @@ public final class JavaPluginMain extends JavaPlugin {
         if (membersOut.equals("我的积分")) {
             long id = event.getSender().getId();
             //如果从json里读取不到这个玩家吗，就把这个玩家丢进去，给一个默认积分
-            Game.SCORE_MAP.computeIfAbsent(event.getSender().getId(), k -> 5000);
+            Casinos.SCORE_MAP.putIfAbsent(event.getSender().getId(), 5000);
             //存入json
-            Game.scoreJson.save();
-            event.getSubject().sendMessage(new At(id).plus("你的积分：" + Game.SCORE_MAP.get(id)));
+            Casinos.scoreJson.save();
+            event.getSubject().sendMessage(new At(id).plus("你的积分：" + Casinos.SCORE_MAP.get(id)));
         }
     }
 
@@ -97,6 +97,8 @@ public final class JavaPluginMain extends JavaPlugin {
         connectSuccessful = RconSupport.connectToServer();
         if (connectSuccessful) {
             getLogger().info("Minecraft服务器连接成功");
+        }else {
+            getLogger().info("Minecraft服务器连接失败");
         }
     }
 

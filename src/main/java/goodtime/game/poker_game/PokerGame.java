@@ -8,7 +8,12 @@ import net.mamoe.mirai.contact.Group;
 
 import java.util.ArrayList;
 
-public abstract class PokerGame extends Game {
+public abstract class PokerGame implements Game {
+
+    public static final String INITIALIZATION_PHASE = "Initialization";
+    public static final String GAMING_PHASE = "Gaming";
+    public static final String END_PHASE = "End";
+
 
     //牌库
     protected ArrayList<Poker> pool = new ArrayList<>();
@@ -19,7 +24,7 @@ public abstract class PokerGame extends Game {
     //玩家
     protected ArrayList<Player> players = new ArrayList<>();
 
-    //当前运行游戏的群组消息事件
+
     Group group;
 
     //游戏当前阶段
@@ -32,11 +37,7 @@ public abstract class PokerGame extends Game {
     Rule currentRule;
 
 
-    public boolean hasMaxPlayer() {
-        return getPlayers().size() == maxPlayerCount;
-    }
-
-
+    @Override
     public boolean addPlayer(Player player) {
         if ((!players.contains(player)) && players.size() < maxPlayerCount) {
             return players.add(player);
@@ -45,23 +46,20 @@ public abstract class PokerGame extends Game {
         }
     }
 
-
+    @Override
     public boolean removePlayer(Player player) {
         return players.remove(player);
     }
 
+    @Override
     public ArrayList<Player> getPlayers() {
         return players;
     }
 
-    public String getCurrentPhase() {
-        return currentPhase;
+    @Override
+    public boolean hasMaxPlayer() {
+        return getPlayers().size() == maxPlayerCount;
     }
-
-    private void removeAllPlayers() {
-        players.clear();
-    }
-
 
     public abstract void initializationPhase(String memberIn);
 
@@ -69,14 +67,7 @@ public abstract class PokerGame extends Game {
 
     public abstract void endPhase();
 
-    public abstract void start();
 
-    public abstract boolean isYourTurn(String memberNick);
 
-    public PokerGame(Group group) {
-        super();
-        maxPlayerCount = 3;
-        this.group = group;
-    }
 
 }
