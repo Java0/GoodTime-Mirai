@@ -1,5 +1,6 @@
 package goodtime.game;
 
+import goodtime.game.gobang.Gobang;
 import goodtime.game.poker_game.DouDiZhu;
 import net.mamoe.mirai.contact.Group;
 
@@ -7,9 +8,11 @@ import java.util.ArrayList;
 
 public interface Game {
 
-    int NOT_RUNING = 0;
+    int NOT_RUNNING = 0;
 
-    int RUNING = 1;
+    int RUNNING = 1;
+
+    int ENDING = 2;
 
     String getName();
 
@@ -19,7 +22,7 @@ public interface Game {
 
     ArrayList<Player> getPlayers();
 
-    boolean hasMaxPlayer();
+    boolean isFull();
 
     int getState();
 
@@ -55,7 +58,7 @@ public interface Game {
             case ".sz":
                 return new DouDiZhu(group);
             case "gobang":
-                return null;
+                return new Gobang(group);
         }
         return null;
     }

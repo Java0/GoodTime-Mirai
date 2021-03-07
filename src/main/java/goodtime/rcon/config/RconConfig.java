@@ -9,7 +9,7 @@ import java.nio.file.StandardOpenOption;
 
 public class RconConfig {
 
-    private static final String CONFIG_PATH = "config/Rcon-Config.json";
+    private static final String CONFIG_PATH = "src/main/resources/config/Rcon-Config.json";
 
     private static final Gson GSON = new Gson();
 

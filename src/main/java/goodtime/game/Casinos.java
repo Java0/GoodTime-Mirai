@@ -59,10 +59,10 @@ public class Casinos {
 
         if (currentGame != null) {
             switch (currentGame.getState()) {
-                case Game.NOT_RUNING:
+                case Game.NOT_RUNNING:
                     if (currentGame.isJoinCommand(membersOut)) {
                         if (currentGame.addPlayer(new Player(sender))) {
-                            group.sendMessage(new At(sender.getId()).plus("加入成功，当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers())));
+                            group.sendMessage(new At(sender.getId()).plus("[" + currentGame.getName() + "] 加入成功，当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers())));
                         } else {
                             group.sendMessage("已加入或已达最大游戏人数，当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers()));
                         }
@@ -72,12 +72,12 @@ public class Casinos {
                         if (currentGame.removePlayer(new Player(sender))) {
                             group.sendMessage(new At(sender.getId()).plus("退出成功，当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers())));
                         } else {
-                            group.sendMessage("你丫就没上桌！当前玩家：\n");
+                            group.sendMessage("你丫就没上桌！当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers()));
                         }
                     }
 
                     if (currentGame.isStartCommand(membersOut)) {
-                        if (currentGame.hasMaxPlayer()) {
+                        if (currentGame.isFull()) {
                             currentGame.start();
                         } else {
                             group.sendMessage("玩家不够，当前玩家：" + Game.getPlayerList(currentGame.getPlayers()));
@@ -85,9 +85,11 @@ public class Casinos {
                     }
                     break;
 
-                case Game.RUNING:
+                case Game.RUNNING:
                     currentGame.commandParse(membersOut, sender.getNick());
                     break;
+                case Game.ENDING:
+                    GAME_MAP.remove(group.getId());
             }
         }
 

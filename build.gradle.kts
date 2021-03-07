@@ -5,7 +5,7 @@ plugins {
 
     id("java")
 
-    id("net.mamoe.mirai-console") version "2.4.0" // mirai-console version
+    id("net.mamoe.mirai-console") version "2.4.2" // mirai-console version
 }
 
 group = "org.example"

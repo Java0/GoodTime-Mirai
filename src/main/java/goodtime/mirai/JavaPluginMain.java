@@ -1,7 +1,5 @@
 package goodtime.mirai;
 
-
-
 import goodtime.game.Casinos;
 import goodtime.rcon.RconSupport;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;

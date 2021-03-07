@@ -14,32 +14,30 @@ public abstract class PokerGame implements Game {
     public static final String GAMING_PHASE = "Gaming";
     public static final String END_PHASE = "End";
 
+    //玩家
+    ArrayList<Player> players = new ArrayList<>();
 
     //牌库
-    protected ArrayList<Poker> pool = new ArrayList<>();
+    ArrayList<Poker> pool = new ArrayList<>();
 
-    //最大可游玩玩家数
-    protected int maxPlayerCount;
-
-    //玩家
-    protected ArrayList<Player> players = new ArrayList<>();
-
-
+    //运行游戏的群组
     Group group;
 
     //游戏当前阶段
-    protected String currentPhase = "";
+    protected String phase = "";
 
     //当前回合出的牌
-    ArrayList<Poker> currentOutPokers;
+    ArrayList<Poker> outPokers;
 
     //当前规则
     Rule currentRule;
 
+    //最大可游玩玩家数
+    int maxPlayer;
 
     @Override
     public boolean addPlayer(Player player) {
-        if ((!players.contains(player)) && players.size() < maxPlayerCount) {
+        if ((!players.contains(player)) && players.size() < maxPlayer) {
             return players.add(player);
         } else {
             return false;
@@ -57,8 +55,8 @@ public abstract class PokerGame implements Game {
     }
 
     @Override
-    public boolean hasMaxPlayer() {
-        return getPlayers().size() == maxPlayerCount;
+    public boolean isFull() {
+        return getPlayers().size() == maxPlayer;
     }
 
     public abstract void initializationPhase(String memberIn);

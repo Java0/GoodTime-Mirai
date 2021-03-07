@@ -15,18 +15,16 @@ import java.util.List;
 
 public class DouDiZhu extends PokerGame {
 
-    int state = NOT_RUNING;
-
-    private final String NAME = "斗地主";
+    private int state = NOT_RUNNING;
 
     public DouDiZhu(Group group) {
-        maxPlayerCount = 3;
+        maxPlayer = 3;
         this.group = group;
     }
 
     @Override
     public String getName() {
-        return NAME;
+        return "斗地主";
     }
 
     @Override
@@ -41,7 +39,7 @@ public class DouDiZhu extends PokerGame {
 
     @Override
     public void commandParse(String command, String playerNick) {
-        switch (currentPhase) {
+        switch (phase) {
             case "":
                 initializationPhase(command);
                 break;
@@ -72,7 +70,7 @@ public class DouDiZhu extends PokerGame {
     @Override
     public void start() {
 
-        state = RUNING;
+        state = RUNNING;
 
         PokerUtil.addPokers(pool);
         PokerUtil.deal(pool, players);
@@ -87,11 +85,11 @@ public class DouDiZhu extends PokerGame {
 
     }
 
-    private int currentPlayerIndex;
+    private int playerIndex;
 
     @Override
     public boolean isYourTurn(String memberNick) {
-        return memberNick.equals(players.get(currentPlayerIndex).getSender().getNick());
+        return memberNick.equals(players.get(playerIndex).getSender().getNick());
     }
 
 
@@ -191,13 +189,13 @@ public class DouDiZhu extends PokerGame {
     @Override
     public void initializationPhase(String memberIn) {
 
-        currentPhase = INITIALIZATION_PHASE;
+        phase = INITIALIZATION_PHASE;
 
         manualDoubling(memberIn);
 
         switch (isSnatchCoomand(memberIn)) {
             case 1:
-                Player currentPlayer = players.get(currentPlayerIndex);
+                Player currentPlayer = players.get(playerIndex);
                 Member m = currentPlayer.getSender();
 
                 currentPlayer.setLandlord(true);
@@ -218,42 +216,42 @@ public class DouDiZhu extends PokerGame {
                 if (rejectionTimes == 3) {
                     initializationPhase("y");
                 } else {
-                    group.sendMessage(new At(players.get(currentPlayerIndex).getSender().getId()).plus("请问您要抢地主吗？ y/n"));
+                    group.sendMessage(new At(players.get(playerIndex).getSender().getId()).plus("请问您要抢地主吗？ y/n"));
                 }
                 break;
         }
     }
 
     private void subIndex() {
-        currentPlayerIndex++;
-        currentPlayerIndex = currentPlayerIndex == players.size() ? 0 : currentPlayerIndex;
+        playerIndex++;
+        playerIndex = playerIndex == players.size() ? 0 : playerIndex;
     }
 
     private int passTimer;
 
     @Override
     public void gamingPhase(String memberOut) {
-        currentPhase = GAMING_PHASE;
+        phase = GAMING_PHASE;
 
-        Player currentPlayer = players.get(currentPlayerIndex);
+        Player currentPlayer = players.get(playerIndex);
 
         if (memberOut.equals("")) {
             group.sendMessage(new At(currentPlayer.getSender().getId()).plus("该你出牌"));
-        } else if (currentOutPokers == null) {
+        } else if (outPokers == null) {
             //地主第一次出牌或者其他玩家都pass的情况
 
             //判断你有这些牌
             if (PokerUtil.youHaveThisPokers(memberOut, currentPlayer.getHandPokers())) {
 
-                currentOutPokers = PokerUtil.charToPokers(memberOut);
-                currentRule = new Rule(currentOutPokers);
+                outPokers = PokerUtil.charToPokers(memberOut);
+                currentRule = new Rule(outPokers);
 
                 //如果你出的牌符合一个规则
                 if (currentRule.getRule() != null) {
 
                     redouble(currentRule.getRule());
 
-                    for (Poker poker : currentOutPokers) {
+                    for (Poker poker : outPokers) {
                         currentPlayer.removeHandPoker(poker);
                     }
 
@@ -268,14 +266,14 @@ public class DouDiZhu extends PokerGame {
                         endPhase();
                     } else {
                         group.sendMessage("玩家：" + currentPlayer.getSender().getNick() + "出了：" +
-                                "\n" + PokerUtil.pokersToString(currentOutPokers) +
+                                "\n" + PokerUtil.pokersToString(outPokers) +
                                 "\n" + "匹配规则：" + currentRule.getRule());
 
                         subIndex();
-                        group.sendMessage(new At(players.get(currentPlayerIndex).getSender().getId()).plus("该你出牌了！"));
+                        group.sendMessage(new At(players.get(playerIndex).getSender().getId()).plus("该你出牌了！"));
                     }
                 } else {
-                    currentOutPokers = null;
+                    outPokers = null;
                     group.sendMessage("请按规则出牌，露露哇露露哒！");
                 }
             } else {
@@ -290,13 +288,13 @@ public class DouDiZhu extends PokerGame {
 
             if (nextRule.getRule() != null && currentRule.comparison(nextRule)) {
 
-                currentOutPokers = PokerUtil.charToPokers(memberOut);
+                outPokers = PokerUtil.charToPokers(memberOut);
 
                 currentRule = nextRule;
 
                 redouble(currentRule.getRule());
 
-                for (Poker poker : currentOutPokers) {
+                for (Poker poker : outPokers) {
                     currentPlayer.removeHandPoker(poker);
                 }
 
@@ -312,11 +310,11 @@ public class DouDiZhu extends PokerGame {
                 } else {
 
                     group.sendMessage("玩家：" + currentPlayer.getSender().getNick() + "出了：" +
-                            "\n" + PokerUtil.pokersToString(currentOutPokers) +
+                            "\n" + PokerUtil.pokersToString(outPokers) +
                             "\n" + "匹配规则：" + currentRule.getRule());
 
                     subIndex();
-                    group.sendMessage(new At(players.get(currentPlayerIndex).getSender().getId()).plus("该你出牌了！"));
+                    group.sendMessage(new At(players.get(playerIndex).getSender().getId()).plus("该你出牌了！"));
                 }
 
 
@@ -326,17 +324,17 @@ public class DouDiZhu extends PokerGame {
 
 
         } else if (isPassCommand(memberOut)) {
-            if (currentOutPokers == null) {
+            if (outPokers == null) {
                 group.sendMessage("在？为什么不出牌？");
             } else {
                 group.sendMessage(new At(currentPlayer.getSender().getId()).plus("过牌！"));
                 passTimer++;
                 if (passTimer == 2) {
                     passTimer = 0;
-                    currentOutPokers = null;
+                    outPokers = null;
                 }
                 subIndex();
-                group.sendMessage(new At(players.get(currentPlayerIndex).getSender().getId()).plus("现在该你出牌！"));
+                group.sendMessage(new At(players.get(playerIndex).getSender().getId()).plus("现在该你出牌！"));
             }
         } else {
             group.sendMessage("你无此牌");
@@ -392,14 +390,14 @@ public class DouDiZhu extends PokerGame {
 
     @Override
     public void endPhase() {
-        currentPhase = END_PHASE;
+        phase = END_PHASE;
 
         StringBuilder sb = new StringBuilder("战况：");
 
         for (int i = 0; i < players.size(); i++) {
             Player p = players.get(i);
             int score = Casinos.SCORE_MAP.get(p.getSender().getId());
-            if (i == currentPlayerIndex) {
+            if (i == playerIndex) {
                 Casinos.SCORE_MAP.put(p.getSender().getId(), score + p.getBasicScore());
                 sb.append("\n").append(p.getSender().getNick()).append(" +").append(p.getBasicScore());
             } else {
@@ -409,6 +407,7 @@ public class DouDiZhu extends PokerGame {
         }
         Casinos.scoreJson.save();
         group.sendMessage("游戏结束，" + sb.toString().trim());
-        Casinos.GAME_MAP.remove(group.getId());
+
+        state = Game.ENDING;
     }
 }
