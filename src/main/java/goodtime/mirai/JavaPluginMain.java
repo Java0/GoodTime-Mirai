@@ -4,10 +4,14 @@ import goodtime.game.Casinos;
 import goodtime.rcon.RconSupport;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
+import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.Listener;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.*;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 public final class JavaPluginMain extends JavaPlugin {
 
@@ -32,6 +36,16 @@ public final class JavaPluginMain extends JavaPlugin {
         String membersOut = message.contentToString();
 
         Casinos.run(event);
+
+        if (membersOut.startsWith("image")) {
+
+            try {
+                Contact.sendImage(event.getSubject(), new FileInputStream("src/main/resources/image/board.png"), "png");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
 
         if (membersOut.startsWith("/")) {
 
@@ -92,12 +106,13 @@ public final class JavaPluginMain extends JavaPlugin {
     @Override
     public void onEnable() {
         Listener l = GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, JavaPluginMain::accept);
-        connectSuccessful = RconSupport.connectToServer();
+       /*
+       connectSuccessful = RconSupport.connectToServer();
         if (connectSuccessful) {
             getLogger().info("Minecraft服务器连接成功");
         }else {
             getLogger().info("Minecraft服务器连接失败");
-        }
+        }*/
     }
 
 }

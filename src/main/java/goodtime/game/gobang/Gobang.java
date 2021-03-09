@@ -10,11 +10,7 @@ import net.mamoe.mirai.message.data.At;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -41,10 +37,6 @@ public class Gobang implements Game {
     //棋盘
     private final char[][] BOARD = new char[15][15];
 
-    private final String BOARD_PATH = "src/main/resources/image/棋盘.png";
-
-    private final String CURRENT_SITUATION = "src/main/resources/image/temp/temp.png";
-
     public Gobang(Group group) {
         this.group = group;
     }
@@ -58,9 +50,12 @@ public class Gobang implements Game {
     public boolean addPlayer(Player player) {
         if ((!players.contains(player)) && players.size() < MAX_PLAYER) {
             return players.add(player);
-        } else {
-            return false;
         }
+        return false;
+    }
+
+    private InputStream input(String path) {
+        return Gobang.class.getClassLoader().getResourceAsStream(path);
     }
 
     @Override
@@ -83,20 +78,12 @@ public class Gobang implements Game {
         return state;
     }
 
+
     @Override
     public void start() {
         state = Game.RUNNING;
 
         playerIndex = new Random().nextInt(2);
-
-
-        File tempImage = new File(CURRENT_SITUATION);
-
-        try {
-            Files.copy(Path.of(BOARD_PATH), tempImage.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         for (Player player : players) {
             player.setBasicScore(500);
@@ -223,9 +210,9 @@ public class Gobang implements Game {
     @Override
     public void commandParse(String command, String playerNick) {
 
-
         if (command.equals("")) {
-            Contact.sendImage(group, new File(BOARD_PATH), "png");
+            Contact.sendImage(group, input("image/board.png"), "png");
+
             group.sendMessage("游戏开始，请使用yx的格式落子(如h8)");
             group.sendMessage(new At(players.get(playerIndex).getSender().getId()).plus("你是白棋，该你落子哟~"));
         } else if (isCoordinate(command)) {
@@ -243,19 +230,9 @@ public class Gobang implements Game {
                     drawImage(currentColor, x + 1, y + 1);
 
                     if (isWin(x, y)) {
-
-                        Player player = players.get(playerIndex);
-                        int score = Casinos.SCORE_MAP.get(player.getSender().getId());
-                        Casinos.SCORE_MAP.put(player.getSender().getId(), score + player.getBasicScore());
-                        Casinos.scoreJson.save();
-
-                        Contact.sendImage(group, new File(CURRENT_SITUATION), "png");
-                        group.sendMessage(new At(players.get(playerIndex).getSender().getId()).plus("你赢了" + player.getBasicScore() + "分"));
-
-                        state = Game.ENDING;
-
+                        endPhase();
                     } else {
-                        Contact.sendImage(group, new File(CURRENT_SITUATION), "png");
+                        Contact.sendImage(group, current, "png");
                         subColorIndex();
                         subIndex();
 
@@ -272,33 +249,54 @@ public class Gobang implements Game {
         }
     }
 
+    private void endPhase() {
+
+        Player player = players.get(playerIndex);
+        int score = Casinos.SCORE_MAP.get(player.getSender().getId());
+        Casinos.SCORE_MAP.put(player.getSender().getId(), score + player.getBasicScore());
+        Casinos.scoreJson.save();
+
+        Contact.sendImage(group, current, "png");
+        group.sendMessage(new At(players.get(playerIndex).getSender().getId()).plus("你赢了" + player.getBasicScore() + "分"));
+        state = Game.ENDING;
+
+    }
+
+
+    BufferedImage white;
+    BufferedImage black;
+    BufferedImage board;
+
+    InputStream current;
+
+    {
+        try {
+            board = ImageIO.read(input("image/board.png"));
+            white = ImageIO.read(input("image/white.png"));
+            black = ImageIO.read(input("image/black.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void drawImage(char color, int x, int y) {
 
-        String WHITE_PATH = "src/main/resources/image/white.png";
+        Graphics2D g = board.createGraphics();
+        switch (color) {
+            case '白':
+                g.drawImage(white, (43 + (x * 94) - white.getWidth() / 2) + 1 + (x - 1) * 3, (43 + (y * 94) - white.getHeight() / 2) + 1 + (y - 1) * 3, white.getWidth(), white.getHeight(), null);
+                break;
+            case '黑':
+                g.drawImage(black, (43 + (x * 94) - black.getWidth() / 2) + 1 + +(x - 1) * 3, (43 + (y * 94) - black.getHeight() / 2) + 1 + (y - 1) * 3, black.getWidth(), black.getHeight(), null);
+                break;
+        }
+        g.dispose();
 
-        String BLACK_PATH = "src/main/resources/image/black.png";
-
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         try {
-            BufferedImage board = ImageIO.read(new FileInputStream(CURRENT_SITUATION));
-
-            BufferedImage white = ImageIO.read(new FileInputStream(WHITE_PATH));
-
-            BufferedImage black = ImageIO.read(new FileInputStream(BLACK_PATH));
-
-            Graphics2D g = board.createGraphics();
-
-            switch (color) {
-                case '白':
-                    g.drawImage(white, (43 + (x * 94) - white.getWidth() / 2) + 1 + (x - 1) * 3, (43 + (y * 94) - white.getHeight() / 2) + 1 + (y - 1) * 3, white.getWidth(), white.getHeight(), null);
-                    break;
-                case '黑':
-                    g.drawImage(black, (43 + (x * 94) - black.getWidth() / 2) + 1 + +(x - 1) * 3, (43 + (y * 94) - black.getHeight() / 2) + 1 + (y - 1) * 3, black.getWidth(), black.getHeight(), null);
-                    break;
-            }
-            g.dispose();
-            ImageIO.write(board, "png", new File(CURRENT_SITUATION));
+            ImageIO.write(board, "png", bos);
+            current = new ByteArrayInputStream(bos.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
         }

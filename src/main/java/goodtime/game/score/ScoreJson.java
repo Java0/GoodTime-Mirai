@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 public class ScoreJson {
 
-    private static final String CONFIG_PATH = "src/main/resources/config/PlayerScore.json";
+    private static final String CONFIG_PATH = "config/PlayerScore.json";
 
     private static final Gson GSON = new Gson();
 

@@ -39,9 +39,8 @@ public abstract class PokerGame implements Game {
     public boolean addPlayer(Player player) {
         if ((!players.contains(player)) && players.size() < maxPlayer) {
             return players.add(player);
-        } else {
-            return false;
         }
+        return false;
     }
 
     @Override
@@ -64,8 +63,6 @@ public abstract class PokerGame implements Game {
     public abstract void gamingPhase(String memberIn);
 
     public abstract void endPhase();
-
-
 
 
 }
