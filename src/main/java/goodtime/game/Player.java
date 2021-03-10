@@ -20,12 +20,9 @@ public class Player {
         return basicScore;
     }
 
-    public void setBasicScore(int basicScore) {
-        this.basicScore = basicScore;
-    }
-
-    public Player(Member sender) {
+    public Player(Member sender, int basicScore) {
         this.sender = sender;
+        this.basicScore = basicScore;
     }
 
     public Member getSender() {
@@ -59,7 +56,7 @@ public class Player {
 
         Player player = (Player) o;
 
-        return sender.getNick().equals(player.sender.getNick());
+        return sender.getId() == player.sender.getId();
     }
 
     @Override
@@ -68,5 +65,9 @@ public class Player {
         result = 31 * result + (isLandlord ? 1 : 0);
         result = 31 * result + handPokers.hashCode();
         return result;
+    }
+
+    public void setBasicScore(int basicScore) {
+        this.basicScore = basicScore;
     }
 }

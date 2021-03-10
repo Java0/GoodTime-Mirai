@@ -10,7 +10,10 @@ import net.mamoe.mirai.message.data.At;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -85,10 +88,6 @@ public class Gobang implements Game {
 
         playerIndex = new Random().nextInt(2);
 
-        for (Player player : players) {
-            player.setBasicScore(500);
-        }
-
         commandParse("", players.get(playerIndex).getSender().getNick());
 
     }
@@ -112,60 +111,14 @@ public class Gobang implements Game {
 
     private boolean isWin(int x, int y) {
         char color = BOARD[x][y];
-        return left_Right(color, x, y) || up_Down(color, x, y) || lowRight_UpperLeft(color, x, y) || lowLeft_UpperRight(color, x, y);
+        return isContinuous(color, x, y, +1, 0) || isContinuous(color, x, y, 0, +1) || isContinuous(color, x, y, +1, +1) || isContinuous(color, x, y, +1, -1);
     }
 
-    private boolean left_Right(char color, int x, int y) {
-        int timer = 1;
-
-        for (int i = x - 1; i >= 0; i--) {
-            if (BOARD[i][y] == color) {
-                timer++;
-            } else {
-                break;
-            }
-        }
-
-        for (int i = x + 1; i < 15; i++) {
-            if (BOARD[i][y] == color) {
-                timer++;
-            } else {
-                break;
-            }
-        }
-
-        return timer == 5;
-
-    }
-
-    private boolean up_Down(char color, int x, int y) {
+    private boolean isContinuous(char color, int x, int y, int xDiff, int yDiff) {
 
         int timer = 1;
 
-        for (int j = y - 1; j >= 0; j--) {
-            if (BOARD[x][j] == color) {
-                timer++;
-            } else {
-                break;
-            }
-        }
-
-        for (int j = y + 1; j < 15; j++) {
-            if (BOARD[x][j] == color) {
-                timer++;
-            } else {
-                break;
-            }
-        }
-
-        return timer == 5;
-    }
-
-
-    private boolean lowRight_UpperLeft(char color, int x, int y) {
-        int timer = 1;
-
-        for (int i = x + 1, j = y + 1; i >= 0 && j >= 0; i++, j++) {
+        for (int i = x + xDiff, j = y + yDiff; i >= 0 && i < 15 && j >= 0 && j < 15; i += xDiff, j += yDiff) {
             if (BOARD[i][j] == color) {
                 timer++;
             } else {
@@ -173,7 +126,7 @@ public class Gobang implements Game {
             }
         }
 
-        for (int i = x - 1, j = y - 1; i >= 0 && j >= 0; i--, j--) {
+        for (int i = x - xDiff, j = y - yDiff; i >= 0 && i < 15 && j >= 0 && j < 15; i -= xDiff, j -= yDiff) {
             if (BOARD[i][j] == color) {
                 timer++;
             } else {
@@ -182,28 +135,7 @@ public class Gobang implements Game {
         }
 
         return timer == 5;
-    }
 
-    private boolean lowLeft_UpperRight(char color, int x, int y) {
-        int timer = 1;
-
-        for (int i = x - 1, j = y + 1; i >= 0 && j >= 0; i--, j++) {
-            if (BOARD[i][j] == color) {
-                timer++;
-            } else {
-                break;
-            }
-        }
-
-        for (int i = x + 1, j = y - 1; i >= 0 && j >= 0; i++, j--) {
-            if (BOARD[i][j] == color) {
-                timer++;
-            } else {
-                break;
-            }
-        }
-
-        return timer == 5;
     }
 
 
@@ -261,7 +193,6 @@ public class Gobang implements Game {
         state = Game.ENDING;
 
     }
-
 
     BufferedImage white;
     BufferedImage black;
@@ -333,6 +264,11 @@ public class Gobang implements Game {
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public int getBasicScore() {
+        return 500;
     }
 
     public boolean isCoordinate(String memberOut) {

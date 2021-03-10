@@ -61,7 +61,7 @@ public class Casinos {
             switch (currentGame.getState()) {
                 case Game.NOT_RUNNING:
                     if (currentGame.isJoinCommand(membersOut)) {
-                        if (currentGame.addPlayer(new Player(sender))) {
+                        if (currentGame.addPlayer(new Player(sender, currentGame.getBasicScore()))) {
                             group.sendMessage(new At(sender.getId()).plus("[" + currentGame.getName() + "] 加入成功，当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers())));
                         } else {
                             group.sendMessage("已加入或已达最大游戏人数，当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers()));
@@ -69,7 +69,7 @@ public class Casinos {
                     }
 
                     if (currentGame.isLeaveCommand(membersOut) && !GAME_MAP.isEmpty()) {
-                        if (currentGame.removePlayer(new Player(sender))) {
+                        if (currentGame.removePlayer(new Player(sender, currentGame.getBasicScore()))) {
                             group.sendMessage(new At(sender.getId()).plus("退出成功，当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers())));
                         } else {
                             group.sendMessage("你丫就没上桌！当前玩家：\n" + Game.getPlayerList(currentGame.getPlayers()));

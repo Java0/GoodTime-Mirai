@@ -38,6 +38,8 @@ public interface Game {
 
     boolean isStartCommand(String memberOut);
 
+    int getBasicScore();
+
     boolean equals(Game game);
 
     static String getPlayerList(ArrayList<Player> players) {

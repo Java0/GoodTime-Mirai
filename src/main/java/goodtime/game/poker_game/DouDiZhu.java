@@ -75,10 +75,6 @@ public class DouDiZhu extends PokerGame {
         PokerUtil.addPokers(pool);
         PokerUtil.deal(pool, players);
 
-        for (Player player : players) {
-            player.setBasicScore(100);
-        }
-
         Collections.shuffle(players);
 
         commandParse("n", "");
@@ -126,6 +122,11 @@ public class DouDiZhu extends PokerGame {
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public int getBasicScore() {
+        return 200;
     }
 
     @Override
